@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calma</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --circle: #a7c4c2;
+            --text: #3e5151;
+            --btn-bg: #ffffff;
+            --font-serif: 'Georgia', serif;
+            --font-sans: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #121b22;
+                --circle: #2d4547;
+                --text: #d5e1e1;
+                --btn-bg: #1c2a33;
+            }
+        }
+
+        body.light-mode { --bg: #f4f7f6; --circle: #a7c4c2; --text: #3e5151; --btn-bg: #ffffff; }
+        body.dark-mode { --bg: #121b22; --circle: #2d4547; --text: #d5e1e1; --btn-bg: #1c2a33; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-serif);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.8s, color 0.8s;
+        }
+
+        /* Pantallas Fullscreen (Ajustes y Evaluación) */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h2 { font-weight: normal; font-style: italic; margin-bottom: 40px; opacity: 0.8; line-height: 1.4; }
+
+        .setting-row {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+        }
+
+        .control-group { display: flex; align-items: center; gap: 20px; }
+
+        .step-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 1px solid var(--circle);
+            background: var(--btn-bg);
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .val-display { font-family: var(--font-sans); font-weight: 800; font-size: 1.4rem; min-width: 25px; }
+
+        /* Pantalla Principal */
+        .main-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 25px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: 1px solid var(--text);
+            color: var(--text);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-family: var(--font-serif);
+            font-size: 0.85rem;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .circle {
+            width: 160px;
+            height: 160px;
+            background-color: var(--circle);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin: 40px 0;
+            transition: transform 1s ease-in-out;
+        }
+
+        #timer { font-family: var(--font-sans); font-weight: 700; font-size: 4rem; color: white; }
+
+        #status { font-size: 1.8rem; font-style: italic; min-height: 2.2rem; }
+
+        #cycles-count { margin-top: 15px; font-size: 0.9rem; opacity: 0.6; }
+
+        .action-btn {
+            margin-top: 40px;
+            padding: 18px 60px;
+            border: none;
+            background-color: var(--btn-bg);
+            color: var(--text);
+            border-radius: 40px;
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            cursor: pointer;
+            width: 260px;
+        }
+
+        .alt-btn {
+            background-color: transparent;
+            border: 1px solid var(--circle);
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="settings-screen" class="fullscreen-overlay">
+        <h2>Personaliza tu respiración</h2>
+        <div class="setting-row">
+            <span>Inhalar</span>
+            <div class="control-group">
+                <button class="step-btn" onclick="changeVal('in', -1)">-</button>
+                <span id="in-val" class="val-display">4</span>
+                <button class="step-btn" onclick="changeVal('in', 1)">+</button>
+            </div>
+        </div>
+        <div class="setting-row">
+            <span>Mantener</span>
+            <div class="control-group">
+                <button class="step-btn" onclick="changeVal('hold', -1)">-</button>
+                <span id="hold-val" class="val-display">2</span>
+                <button class="step-btn" onclick="changeVal('hold', 1)">+</button>
+            </div>
+        </div>
+        <div class="setting-row">
+            <span>Exhalar</span>
+            <div class="control-group">
+                <button class="step-btn" onclick="changeVal('out', -1)">-</button>
+                <span id="out-val" class="val-display">4</span>
+                <button class="step-btn" onclick="changeVal('out', 1)">+</button>
+            </div>
+        </div>
+        <button class="action-btn" onclick="closeSettings()">Guardar</button>
+    </div>
+
+    <div id="eval-screen" class="fullscreen-overlay">
+        <h2>Has completado 10 ciclos.<br>¿Cómo te sientes ahora?</h2>
+        <button class="action-btn" onclick="finishSession()">Estoy mejor</button>
+        <button class="action-btn alt-btn" onclick="continueSession()">Sigo mal</button>
+    </div>
+
+    <div class="top-bar">
+        <button class="nav-btn" id="settBtn" onclick="openSettings()">Ajustes</button>
+        <button class="nav-btn" onclick="toggleThemeManual()">Tono</button>
+    </div>
+
+    <main class="main-screen">
+        <p id="status">En calma</p>
+        <div class="circle" id="breathCircle">
+            <span id="timer">0</span>
+        </div>
+        <div id="cycles-count">Ciclos: 0</div>
+        <button class="action-btn" id="actionBtn" onclick="handleAction()">Comenzar</button>
+    </main>
+
+    <script>
+        
+    // Función para manejar la vibración de forma segura
+    function vibratePulse(pattern) {
+        if ("vibrate" in navigator) {
+            navigator.vibrate(pattern);
+        }
+    }
+
+    async function cycle() {
+        if (!isActive) return;
+
+        // --- INHALAR ---
+        statusText.innerText = "Inhala...";
+        vibratePulse(50); // Vibración corta al iniciar
+        circle.style.transition = `transform ${times.in}s ease-in-out`;
+        circle.style.transform = "scale(1.8)";
+        runTimer(times.in);
+        await new Promise(r => setTimeout(r, times.in * 1000));
+
+        if (!isActive) return;
+
+        // --- MANTENER ---
+        statusText.innerText = "Mantén...";
+        vibratePulse([40, 60, 40]); // Doble pulso rápido (táctil de "alerta")
+        runTimer(times.hold);
+        await new Promise(r => setTimeout(r, times.hold * 1000));
+
+        if (!isActive) return;
+
+        // --- EXHALAR ---
+        statusText.innerText = "Exhala...";
+        vibratePulse(150); // Vibración más larga y suave
+        circle.style.transition = `transform ${times.out}s ease-in-out`;
+        circle.style.transform = "scale(1)";
+        runTimer(times.out);
+        await new Promise(r => setTimeout(r, times.out * 1000));
+
+        if (isActive) {
+            cyclesCompletados++;
+            cyclesDisplay.innerText = `Ciclos: ${cyclesCompletados}`;
+            if (cyclesCompletados % 10 === 0) showEvaluation();
+            else cycle();
+        }
+    }
+
+        const circle = document.getElementById('breathCircle');
+        const timerDisplay = document.getElementById('timer');
+        const statusText = document.getElementById('status');
+        const actionBtn = document.getElementById('actionBtn');
+        const cyclesDisplay = document.getElementById('cycles-count');
+        const settingsScreen = document.getElementById('settings-screen');
+        const evalScreen = document.getElementById('eval-screen');
+        
+        let isActive = false;
+        let cyclesCompletados = 0;
+        let times = { in: 4, hold: 2, out: 4 };
+
+        function openSettings() { if (!isActive) settingsScreen.style.display = 'flex'; }
+        function closeSettings() { settingsScreen.style.display = 'none'; }
+
+        function changeVal(type, delta) {
+            times[type] = Math.max(type === 'hold' ? 0 : 1, times[type] + delta);
+            document.getElementById(`${type}-val`).innerText = times[type];
+        }
+
+        function toggleThemeManual() {
+            const body = document.body;
+            const isDark = body.classList.contains('dark-mode') || 
+                          (!body.classList.contains('light-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            body.classList.toggle('light-mode', isDark);
+            body.classList.toggle('dark-mode', !isDark);
+        }
+
+        function runTimer(seconds) {
+            let count = seconds;
+            timerDisplay.innerText = count;
+            if (count <= 0) return;
+            const countdown = setInterval(() => {
+                count--;
+                if (count >= 0) timerDisplay.innerText = count;
+                else clearInterval(countdown);
+            }, 1000);
+        }
+
+        async function cycle() {
+            if (!isActive) return;
+
+            // INHALAR
+            statusText.innerText = "Inhala...";
+            circle.style.transition = `transform ${times.in}s ease-in-out`;
+            circle.style.transform = "scale(1.8)";
+            runTimer(times.in);
+            await new Promise(r => setTimeout(r, times.in * 1000));
+
+            if (!isActive) return;
+
+            // MANTENER
+            statusText.innerText = "Mantén...";
+            runTimer(times.hold);
+            await new Promise(r => setTimeout(r, times.hold * 1000));
+
+            if (!isActive) return;
+
+            // EXHALAR
+            statusText.innerText = "Exhala...";
+            circle.style.transition = `transform ${times.out}s ease-in-out`;
+            circle.style.transform = "scale(1)";
+            runTimer(times.out);
+            await new Promise(r => setTimeout(r, times.out * 1000));
+
+            if (isActive) {
+                cyclesCompletados++;
+                cyclesDisplay.innerText = `Ciclos: ${cyclesCompletados}`;
+                
+                // Chequeo de cada 10 ciclos
+                if (cyclesCompletados % 10 === 0) {
+                    showEvaluation();
+                } else {
+                    cycle();
+                }
+            }
+        }
+
+        function showEvaluation() {
+            isActive = false; // Pausamos la respiración
+            evalScreen.style.display = 'flex';
+            circle.style.transform = "scale(1)";
+            timerDisplay.innerText = "0";
+        }
+
+        function finishSession() {
+            evalScreen.style.display = 'none';
+            resetToHome();
+        }
+
+        function continueSession() {
+            evalScreen.style.display = 'none';
+            isActive = true;
+            actionBtn.innerText = "Detener";
+            cycle();
+        }
+
+        function resetToHome() {
+            isActive = false;
+            cyclesCompletados = 0;
+            cyclesDisplay.innerText = `Ciclos: 0`;
+            actionBtn.innerText = "Comenzar";
+            statusText.innerText = "En calma";
+            timerDisplay.innerText = "0";
+            circle.style.transform = "scale(1)";
+            document.getElementById('settBtn').style.visibility = 'visible';
+            // Limpiar cualquier proceso pendiente
+            let id = window.setTimeout(() => {}, 0);
+            while (id--) window.clearTimeout(id);
+        }
+
+        function handleAction() {
+            if (!isActive) {
+                isActive = true;
+                actionBtn.innerText = "Detener";
+                document.getElementById('settBtn').style.visibility = 'hidden';
+                cycle();
+            } else {
+                resetToHome();
+            }
+        }
+    </script>
+</body>
+</html>
